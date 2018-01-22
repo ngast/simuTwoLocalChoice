@@ -1,8 +1,17 @@
+/* 
+   This code simulates the "supermarket model" a system with N queues 
+
+   The Power of Two Choices on Graphs: the Pair-Approximation is
+   Accurate Nicolas Gast Inria ACM MAMA Workshop,
+
+   Copyright : Nicolas Gast (2018) -- nicolas.gast@inria.fr
+ */
 #include<iostream>
 #include<cstdlib>
 #include<cmath>
 
 enum {NO_CHOICE=0, LOCAL_CHOICE, RND_CHOICE, SQUARE_CHOICE, ERDOS_RENYI, FIXED_DEGREE, TREE};
+
 
 class histogram{
   int value_max;
@@ -148,7 +157,7 @@ public:
     }
   }
   void iterate_then_hist(long long int nbSteps, int freq){
-    long long int percent = nbSteps/freq/100;
+    double  percent = ((double)nbSteps)/freq/100;
     long long int next_percent = 0;
     for(long long int i=0;i<nbSteps/freq; i++){
       iterate(freq);

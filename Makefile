@@ -1,5 +1,5 @@
 all:
-	g++ -O3 -W -Wall twoChoices_openQueue.cc -o simulate
+	g++ -g -O2 -W -Wall twoChoices_openQueue.cc -o simulate
 
 clean:
 	rm simulate *~
