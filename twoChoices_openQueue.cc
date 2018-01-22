@@ -9,9 +9,16 @@
 #include<iostream>
 #include<cstdlib>
 #include<cmath>
+#include<random>
+
+std::mt19937 mt_rand(0);
 
 enum {NO_CHOICE=0, LOCAL_CHOICE, RND_CHOICE, SQUARE_CHOICE, ERDOS_RENYI, FIXED_DEGREE, TREE};
 
+double rand_unif(){
+  //return(rand()/(1.+(double)RAND_MAX));
+  return mt_rand()/((double)mt_rand.max());
+}
 
 class histogram{
   int value_max;
@@ -78,7 +85,7 @@ public:
     }
     for(int i=0;i<N;i++)
       for(int j=0;j<N;j++)
-	if (rand()/(1.+(double)RAND_MAX) <= p){
+	if (rand_unif() <= p){
 	  neighbors[i][number_neighbors[i]] = j;
 	  neighbors[j][number_neighbors[j]] = i;
 	  number_neighbors[i]++;
@@ -99,7 +106,7 @@ public:
     }
     for(int i=0;i<N;i++){
       while(number_neighbors[i]<k){
-	int potential_neighbor = rand()%N;
+	int potential_neighbor = mt_rand()%N;
 	if (number_neighbors[potential_neighbor]<k){
 	  neighbors[i][number_neighbors[i]] = potential_neighbor;
 	  number_neighbors[i]++;
@@ -129,29 +136,29 @@ public:
     
   void iterate(long long int nbSteps){
     for(long long int t=0;t<nbSteps;t++){
-      if ( rand()/(1.+(double)RAND_MAX) <= lambda) { // Arrival
-	int i = rand()%N, j;
+      if (rand_unif() <= lambda) { // Arrival
+	int i = mt_rand()%N, j;
 	switch(strategy){
 	case NO_CHOICE:     j = i;        break;
 	case LOCAL_CHOICE:  j = (i+1)%N;  break;
-	case RND_CHOICE:    j = rand()%N; break;
+	case RND_CHOICE:    j = mt_rand()%N; break;
 	case SQUARE_CHOICE:
-	  if (rand()%2)
+	  if (mt_rand()%2)
 	    j = (i+sqrtN)%N;
 	  else
 	    j = (i/sqrtN)*sqrtN + ((i+1)%sqrtN);
 	  break;
-	case ERDOS_RENYI: j = neighbors[i][rand()%number_neighbors[i]]; break;
-	case FIXED_DEGREE: j = neighbors[i][rand()%number_neighbors[i]]; break;
-	case TREE: j = neighbors[i][rand()%number_neighbors[i]]; break;
+	case ERDOS_RENYI: j = neighbors[i][mt_rand()%number_neighbors[i]]; break;
+	case FIXED_DEGREE: j = neighbors[i][mt_rand()%number_neighbors[i]]; break;
+	case TREE: j = neighbors[i][mt_rand()%number_neighbors[i]]; break;
 	default: std::cerr << "strategy unknown\n"; exit(-1);	  
 	}
 	if(stations[j]<stations[i]) stations[j]++;
 	else if (stations[i]<stations[j]) stations[i]++;
-	else if (rand()%2) stations[i]++; else stations[j]++;
+	else if (mt_rand()%2) stations[i]++; else stations[j]++;
       }
       else { // Departure
-	int i = rand()%N;
+	int i = mt_rand()%N;
 	if (stations[i]>0) stations[i]--;
       }
     }
