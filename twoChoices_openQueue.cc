@@ -61,12 +61,12 @@ class queue{
   int ** neighbors; 
   int * number_neighbors; 
 public:
-  queue(int N, double rho, int strategy, double k=1): N(N), strategy(strategy) {
+  queue(int N, double rho, int strategy, double k=2): N(N), strategy(strategy) {
     sqrtN = sqrt(N); if (strategy == SQUARE_CHOICE) N = sqrtN*sqrtN;
     stations = (int*) malloc(sizeof(int)*N);
     for (int i=0;i<N;i++) stations[i]=0;
     lambda = rho/(1+rho);
-    if (k != 1 && (strategy < ERDOS_RENYI))
+    if (k != 2 && (strategy < ERDOS_RENYI))
       std::cerr << "*** warning: k is set but strategy != RANDOM_GRAPH ***\n";
     else{
       switch(strategy){
@@ -199,7 +199,7 @@ int main(int argc, char ** argv){
   long long int nbIteration = 10000;
   double rho = 0.5;
   int choice = NO_CHOICE;
-  double k = 1;
+  double k = 2;
   for(int i=1;i<argc;i++){
     switch (*(argv[i])){
     case 'N': N = atoi(argv[i]+1); break;
