@@ -206,7 +206,7 @@ int main(int argc, char ** argv){
     case 'T': nbIteration = atoll(argv[i]+1); break;
     case 'r': rho = atof(argv[i]+1); break; // note: if rho = -1, we explore values of \rho
     case 'C': choice = atoi(argv[i]+1); break;
-    case 'k': k = atof(argv[i]+1); break;
+    case 'k': k = atof(argv[i]+1); break; // Degree of the graph (should only be used if C>=ERDOS_RENYI)
     case 'p': std::cerr<<"on imprime le graphe\n";
       {queue q(N,rho,choice,k); q.print_graph(); exit(-1);} break;
     default: std::cerr << "*** Warning: unknown option " << argv[i] << " ***\n"; break;
