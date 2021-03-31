@@ -54,7 +54,7 @@ class TwoChoiceNeighboor():
         """
         return twoChoiceTheory(self.rho, self.d)
 
-    def simulate(self, N, T=100000000, choice=1, force_recompute=False):
+    def simulate(self, N, T=1000000000, choice=1, force_recompute=False):
         """
         Args:
         - N = number of servers
