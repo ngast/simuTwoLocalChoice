@@ -54,19 +54,22 @@ class TwoChoiceNeighboor():
         """
         return twoChoiceTheory(self.rho, self.d)
 
-    def simulate(self, N, T=1000000000, choice=1, force_recompute=False):
+    def simulate(self, N, T=1000000000, choice=1, degree=1, force_recompute=False):
         """
         Args:
         - N = number of servers
         - T = time horizon
         - rho = arrival rate
-        - choice : 0 (no choice), 1 (=local choice), 2 (JSQ(2), random)
+        - choice : 0 (no choice), 1 (=local choice), 2 (JSQ(2), random), 3: SQUARE_CHOICE, 4: ERDOS_RENYI, 5: FIXED_DEGREE, 6:TREEms
         """
-        file_name = 'results/simu_N{0}_T{1}_C{2}_r{3}'.format(N,T,int(self.rho*1000),choice)
+        if choice < 4 and degree != 1:
+            print("degree should not be set for No-choice, local choice, JSQ or square. Is this an error?")
+        file_name = 'results/simu_N{}_T{}_C{}_r{}_k{}'.format(N,T,int(self.rho*1000),choice,degree)
         if force_recompute or not os.path.isfile(file_name):
-            os.system('./simulate N{0} T{1} r{2} C{3} > {4}'.format(N,T,self.rho,choice,file_name))
+            os.system('./simulate N{0} T{1} r{2} C{3} k{4}> results/tmp'.format(N,T,self.rho,choice,degree))
+            os.rename('results/tmp',file_name)
         x = np.loadtxt(file_name)
-        return(x[:,1]/sum(x[:,1]))
+        return x[:,1]/sum(x[:,1])
 
     def pair_approximation(self, force_recompute=False, atol=1e-10):
         """
