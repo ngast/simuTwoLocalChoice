@@ -10,7 +10,9 @@ Main functions:
 - 
 '''
 import numpy as np
-import scipy.integrate
+import os
+if not os.path.isdir('results'):
+    os.mkdir('results')
 try:
     from numba import jit
 except ImportError:
@@ -21,7 +23,15 @@ except ImportError:
             return func
         return useless_decorator
 
-class NEIGHBOOR_TWO_CHOICE():
+try:
+    os.system('make')
+    SIMULATION_AVAILABLE=True
+except Exception as error:
+    print("Problem with the make command: simulation not available")
+    print(error)
+    SIMULATION_AVAILABLE=False
+
+class TwoChoiceNeighboor():
     """
     proxy class to call various functions to compare simulation and approximations.
     """
@@ -44,9 +54,19 @@ class NEIGHBOOR_TWO_CHOICE():
         """
         return twoChoiceTheory(self.rho, self.d)
 
-    def simulation(self):
-        assert False, "not implemented"
-        pass
+    def simulate(self, N, T=100000000, choice=1, force_recompute=False):
+        """
+        Args:
+        - N = number of servers
+        - T = time horizon
+        - rho = arrival rate
+        - choice : 0 (no choice), 1 (=local choice), 2 (JSQ(2), random)
+        """
+        file_name = 'results/simu_N{0}_T{1}_C{2}_r{3}'.format(N,T,int(self.rho*1000),choice)
+        if force_recompute or not os.path.isfile(file_name):
+            os.system('./simulate N{0} T{1} r{2} C{3} > {4}'.format(N,T,self.rho,choice,file_name))
+        x = np.loadtxt(file_name)
+        return(x[:,1]/sum(x[:,1]))
 
     def pair_approximation(self, force_recompute=False, atol=1e-10):
         """
@@ -153,3 +173,4 @@ def stationnary_distribution_pairApprox(rho, d=50, force_recompute=False, atol=1
     x = np.sum(y, 1)
     np.savetxt(filename, x)
     return x
+
