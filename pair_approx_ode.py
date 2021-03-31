@@ -8,9 +8,18 @@ Main functions:
 - mm1(rho, d=50)
 - twoChoiceTheory(rho, d=50)
 - 
-
 '''
 import numpy as np
+import scipy.integrate
+try:
+    from numba import jit
+except ImportError:
+    print("Numba is not installed. We will run without it")
+    print("This can be *much* slower")
+    def jit(nopython=True):
+        def useless_decorator(func):
+            return func
+        return useless_decorator
 
 class NEIGHBOOR_TWO_CHOICE():
     """
@@ -39,7 +48,7 @@ class NEIGHBOOR_TWO_CHOICE():
         assert False, "not implemented"
         pass
 
-    def pair_approximation(self, force_recompute=False, atol=1e-7):
+    def pair_approximation(self, force_recompute=False, atol=1e-10):
         """
         Returns the pair approximation. This methods numerically integrate
         an ODE corresponding to the fixed point.
@@ -75,6 +84,7 @@ def twoChoiceTheory(rho, d=50):
     x = rho ** (2**np.arange(d)-1)
     return -np.diff(x)
 
+@jit(nopython=True)
 def derivative_2neighboorChoice(y, rho, mu=1, d=50):
     """
     Returns the derivative for the pair-approximation.
@@ -85,8 +95,8 @@ def derivative_2neighboorChoice(y, rho, mu=1, d=50):
     p = np.zeros(d)
 
     for i in range(d):
-        if sum(y[i]) >0:
-            p[i] = (sum (y[i][i+1:d]) + y[i][i]/2) / sum(y[i])
+        if np.sum(y[i]) >0:
+            p[i] = (np.sum (y[i][i+1:d]) + y[i][i]/2) / np.sum(y[i])
     for i in range(d):
         for j in range(d):
             if i>0:
@@ -110,7 +120,7 @@ def derivative_2neighboorChoice(y, rho, mu=1, d=50):
     return derivative
 
 
-def stationnary_distribution_pairApprox(rho, d=50, force_recompute=False, atol=1e-7):
+def stationnary_distribution_pairApprox(rho, d=50, force_recompute=False, atol=1e-10):
     """
     Returns the stationary distribution for the pair-approximation.
 
@@ -143,7 +153,3 @@ def stationnary_distribution_pairApprox(rho, d=50, force_recompute=False, atol=1
     x = np.sum(y, 1)
     np.savetxt(filename, x)
     return x
-
-
-
-#print(stationnary_distribution_pairApprox(0.5, force_recompute=True))
