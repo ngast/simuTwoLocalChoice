@@ -54,7 +54,7 @@ class TwoChoiceNeighboor():
         """
         return twoChoiceTheory(self.rho, self.d)
 
-    def simulate(self, N, T=1000000000, choice=1, degree=1, force_recompute=False):
+    def simulate(self, N, T=1000000000, choice=1, degree=2, force_recompute=False):
         """
         Args:
         - N = number of servers
@@ -62,7 +62,7 @@ class TwoChoiceNeighboor():
         - rho = arrival rate
         - choice : 0 (no choice), 1 (=local choice), 2 (JSQ(2), random), 3: SQUARE_CHOICE, 4: ERDOS_RENYI, 5: FIXED_DEGREE, 6:TREEms
         """
-        if choice < 4 and degree != 1:
+        if choice < 4 and degree != 2:
             print("degree should not be set for No-choice, local choice, JSQ or square. Is this an error?")
         file_name = 'results/simu_N{}_T{}_C{}_r{}_k{}'.format(N,T,int(self.rho*1000),choice,degree)
         if force_recompute or not os.path.isfile(file_name):
@@ -71,7 +71,7 @@ class TwoChoiceNeighboor():
         x = np.loadtxt(file_name)
         return x[:,1]/sum(x[:,1])
 
-    def pair_approximation(self, force_recompute=False, atol=1e-10):
+    def pair_approximation(self, degree=2, force_recompute=False, atol=1e-10):
         """
         Returns the pair approximation. This methods numerically integrate
         an ODE corresponding to the fixed point.
@@ -80,7 +80,8 @@ class TwoChoiceNeighboor():
         - force_recompute: if False, will try to load a file from disk
         - atol: absolute numerical error tolerated (when computing the fixed point of the ODE)
         """
-        return stationnary_distribution_pairApprox(self.rho, self.d, force_recompute, atol)
+        return stationnary_distribution_pairApprox(self.rho, degree=degree, d=self.d,
+                                                   force_recompute=force_recompute, atol=atol)
 
 
 def mm1(rho, d=50):
@@ -108,48 +109,48 @@ def twoChoiceTheory(rho, d=50):
     return -np.diff(x)
 
 @jit(nopython=True)
-def derivative_2neighboorChoice(y, rho, mu=1, d=50):
+def derivative_2neighboorChoice(y, rho, degree=2, mu=1, d=50):
     """
     Returns the derivative for the pair-approximation.
 
     Here y[i,j]=percentage of queue i with neighboor j (as defined as in the paper).
     """
     derivative = np.zeros( (d, d))
-    p = np.zeros(d)
+    q = np.zeros(d)
 
     for i in range(d):
         if np.sum(y[i]) >0:
-            p[i] = (np.sum (y[i][i+1:d]) + y[i][i]/2) / np.sum(y[i])
+            q[i] = (np.sum (y[i][i+1:d]) + y[i][i]/2) / np.sum(y[i]) # vector Q of the paper
     for i in range(d):
         for j in range(d):
             if i>0:
-                derivative[i][j]   +=  rho*p[i-1]*y[i-1][j] - mu*y[i][j]
-                derivative[i-1][j] += -rho*p[i-1]*y[i-1][j] + mu*y[i][j]
+                derivative[i][j]   +=  2*(degree-1)/degree*rho*q[i-1]*y[i-1][j] - mu*y[i][j]
+                derivative[i-1][j] += -2*(degree-1)/degree*rho*q[i-1]*y[i-1][j] + mu*y[i][j]
                 if  i<=j:
-                    derivative[i][j]   +=  rho*y[i-1][j]
-                    derivative[i-1][j] += -rho*y[i-1][j]
+                    derivative[i][j]   +=  2/degree*rho*y[i-1][j]
+                    derivative[i-1][j] += -2/degree*rho*y[i-1][j]
                 elif i-1==j:
-                    derivative[i][j]   +=  rho*y[i-1][j]/2
-                    derivative[i-1][j] += -rho*y[i-1][j]/2
+                    derivative[i][j]   +=  2/degree*rho*y[i-1][j]/2
+                    derivative[i-1][j] += -2/degree*rho*y[i-1][j]/2
             if j>0:
-                derivative[i][j]   +=  rho*p[j-1]*y[i][j-1] - mu*y[i][j]
-                derivative[i][j-1] += -rho*p[j-1]*y[i][j-1] + mu*y[i][j]
+                derivative[i][j]   +=  2*(degree-1)/degree*rho*q[j-1]*y[i][j-1] - mu*y[i][j]
+                derivative[i][j-1] += -2*(degree-1)/degree*rho*q[j-1]*y[i][j-1] + mu*y[i][j]
                 if j<=i:
-                    derivative[i][j]   +=  rho*y[i][j-1]
-                    derivative[i][j-1] += -rho*y[i][j-1]
+                    derivative[i][j]   +=  2/degree*rho*y[i][j-1]
+                    derivative[i][j-1] += -2/degree*rho*y[i][j-1]
                 elif i==j-1:
-                    derivative[i][j]   +=  rho*y[i][j-1]/2
-                    derivative[i][j-1] += -rho*y[i][j-1]/2
+                    derivative[i][j]   +=  2/degree*rho*y[i][j-1]/2
+                    derivative[i][j-1] += -2/degree*rho*y[i][j-1]/2
     return derivative
 
 
-def stationnary_distribution_pairApprox(rho, d=50, force_recompute=False, atol=1e-10):
+def stationnary_distribution_pairApprox(rho, degree=2, d=50, force_recompute=False, atol=1e-10):
     """
     Returns the stationary distribution for the pair-approximation.
 
     This functin is based on a numerical integration of the ODE.
     """
-    filename = ''.join(['results/pair_approx_d',str(d),'_',str(rho)])
+    filename = ''.join(['results/pair_approx_d',str(d),'_',str(rho),'_k',str(degree)])
     if not force_recompute:
         try:
             return np.loadtxt(filename)
@@ -170,7 +171,7 @@ def stationnary_distribution_pairApprox(rho, d=50, force_recompute=False, atol=1
     while abs(sum(y[0])-1+rho)>1e-5 or np.sum(np.abs(y-old_y)) > atol:
         old_y = np.copy(y)
         for t in range(0,T):
-            y  += h * derivative_2neighboorChoice(y, rho, 1, d)
+            y  += h * derivative_2neighboorChoice(y, rho, degree, 1, d)
         print('T=', T*conv, 'diff=', np.sum(np.abs(y-old_y)))
         conv += 1
     x = np.sum(y, 1)
