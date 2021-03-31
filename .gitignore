@@ -1,0 +1,8 @@
+simulate.dSYM/
+simulate
+*~ 
+.ipynb_checkpoints
+__pycache__
+Untitled.ipynb
+results/
+
